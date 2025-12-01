@@ -1,0 +1,717 @@
+/* style.css — Ultimate iOS Dark Mode with 3D Depth */
+
+
+html{
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+:root {
+   --bg-deep: #000000;
+  --bg-subtle: #121212;
+  --card-bg: rgba(28, 28, 30, 0.65);
+  --accent: #0A84FF;
+  --text: #f1f1f1;
+  --muted: #a1a1a1;
+  --border: rgba(255,255,255,0.1);
+  --radius: 12px;
+  --transition: 0.3s ease;
+}
+
+
+* { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0;  }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-deep);
+  background-image: 
+    radial-gradient(circle at 100% 0%, rgba(10, 132, 255, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 0% 80%, rgba(50, 215, 75, 0.1) 0%, transparent 40%),
+    linear-gradient(180deg, var(--bg-subtle) 0%, var(--bg-deep) 100%);
+ background-color: var(--bg-deep);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main.container {
+  flex: 1;
+ width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* --- Typography & Utilities --- */
+.h1 { font-size: 22px; margin: 0 0 12px; font-weight: 700; letter-spacing: 0.3px; }
+.muted { color: var(--text-secondary); font-size: 14px; font-weight: 400; }
+.small { font-size: 13px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.space-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.hidden, .hidden-mobile { display: none !important; }
+
+/* --- UI Elements --- */
+/* Картки в стилі iOS з 3D ефектом появи */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 1rem;
+  border: 1px solid var(--border);
+  transition: var(--transition);
+  
+  /* 3D Анімація появи */
+  animation: cardEntrance 0.6s var(--ease-ios) backwards;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
+/* Ключові кадри для 3D появи */
+@keyframes cardEntrance {
+  0% {
+    opacity: 0;
+    /* Елемент з'являється з глибини, трохи повернутий і опущений */
+    transform: translate3d(0, 30px, -50px) rotateX(5deg) scale(0.96);
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0deg) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Inputs */
+input[type=text], input[type=password], input[type=number], select, textarea { 
+  background: rgba(118, 118, 128, 0.12); /* iOS secondary fill color */
+  border: 1px solid transparent; 
+  padding: 12px 14px; 
+  border-radius: 10px; 
+  color: var(--text-primary); 
+  width: 100%; 
+  transition: all 0.2s; 
+  font-size: 16px; /* Розмір шрифту 16px запобігає зуму на iPhone */
+}
+input:focus, select:focus, textarea:focus { 
+  outline: none; 
+  background: rgba(118, 118, 128, 0.24);
+ 
+}
+::placeholder { color: var(--text-tertiary); }
+
+/* Floating / animated labels for inputs */
+.field {
+  overflow: visible;
+  position: relative;
+  width: 100%;
+}
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.12s ease;
+}
+.field input::placeholder { color: transparent; } /* keep visual placeholder hidden, use label */
+
+.floating-label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.16s ease;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-weight: 500;
+  z-index: 5;
+
+  /* фон підпису — такий же, як у картки, щоб замаскувати бордер інпута */
+ 
+  /* трохи підсвітки, щоб відділити від фону */
+  
+}
+
+/* Коли підпис піднімається — чіткий фон + колір акценту */
+.field input:focus + .floating-label,
+.field textarea:focus + .floating-label,
+.field select:focus + .floating-label,
+.field input:not(:placeholder-shown) + .floating-label,
+.field textarea:not(:placeholder-shown) + .floating-label,
+.field.filled .floating-label {
+  top: -8px;
+  transform: none;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--card-bg);
+  padding: 0 8px;
+  z-index: 6;
+}
+
+/* Захист від зміни бордеру: псевдоелемент позаду label, щоб маскувати краю */
+
+/* Дрібні корекції для мобільних */
+@media (max-width: 480px) {
+  .floating-label { left: 10px; padding: 0 6px; }
+  .floating-label::before { left: -4px; right: -4px; }
+}
+
+/* Buttons */
+.btn { 
+background-color: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 1rem;
+}
+.btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn:active { transform: scale(0.98); }
+
+.btn-ghost { 
+  background: rgba(118, 118, 128, 0.12);
+  border: 1px solid transparent;
+  padding: 10px 16px; 
+  border-radius: 10px; 
+  color: var(--accent); 
+  cursor: pointer; 
+  transition: all 0.2s; 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 8px; font-size: 15px; font-weight: 500;
+}
+.btn-ghost:hover { background: rgba(118, 118, 128, 0.24); }
+.btn-ghost.small { padding: 6px 12px; font-size: 13px; }
+
+/* Tables */
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; }
+th, td { padding: 14px 10px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+th { font-weight: 600; color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+tr:last-child td { border-bottom: none; }
+
+/* --- Layout & Structure --- */
+header#header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(28, 28, 30, 0.8); /* Super translucent header */
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  position: sticky; top: 0; z-index: 50;
+  border-bottom: 1px solid var(--glass-border);
+  height: 60px;
+}
+
+.header-logo { display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.logo-img {
+  width: clamp(2.0rem, 6.0vw, 2.8rem);
+  height: auto;
+  max-height: 2.8rem;
+  display: block;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  background: transparent;
+}
+
+/* keep previous .logo fallback usable if image missing */
+.logo {
+  display: none;
+}
+
+/* small tweak for very small headers */
+@media (max-width: 480px) {
+  .logo-img { width: clamp(1.8rem, 8vw, 2.2rem); max-height:2.2rem; }
+}
+@media (min-width: 769px) {
+  .logo-img { width: clamp(2.4rem, 2.2vw, 3.2rem); max-height:3.2rem; }
+}
+.header-btn { width: 40px; height: 40px; border-radius: 10px; background: rgba(118, 118, 128, 0.12); border: none; color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.header-spacer { width: 40px; }
+#topnav { display: none; gap: 4px; }
+
+main.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  padding-bottom: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* --- Login Page Special Design --- */
+#auth.card {
+  max-width: 400px;
+  margin: 6vh auto; /* Центрування по вертикалі */
+  padding: 32px 24px;
+  background: rgba(30, 30, 32, 0.8);
+  box-shadow: var(--shadow-lg);
+  border-top: 1px solid rgba(255,255,255,0.2);
+  position: relative;
+  overflow: hidden;
+  /* Більш драматична поява для логіну */
+  animation: authPopUp 0.7s var(--bounce-ios) backwards;
+}
+
+/* Додаємо "світіння" на фон картки логіну */
+#auth.card::before {
+  content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle at center, rgba(10, 132, 255, 0.1) 0%, transparent 50%);
+  animation: rotateGlow 10s linear infinite; z-index: -1; pointer-events: none;
+}
+
+@keyframes authPopUp {
+  from { opacity: 0; transform: scale(0.9) translateY(40px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes rotateGlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+#auth .h1 { font-size: 28px; text-align: center; }
+#auth .muted { text-align: center; margin-bottom: 24px; display: block; }
+
+/* --- Bottom Nav (iOS Tab Bar style) --- */
+#bottom-nav {
+  position: fixed; 
+  bottom: 0; 
+  left: 0; 
+  right: 0;
+  height: 64px;
+  width: 100%;
+  display: flex;
+  background: rgba(28, 28, 30, 0.95);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
+  z-index: 100;
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+.nav-item { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 4px; 
+  background: transparent; 
+  border: none; 
+  color: var(--text-secondary); 
+  font-size: 11px; 
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-ios);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.nav-item i { 
+  font-size: 22px; 
+  margin-bottom: 2px; 
+  transition: transform 0.2s var(--bounce-ios); 
+}
+.nav-item:active { transform: scale(0.9); }
+.nav-item.active { color: var(--accent); }
+.nav-item.active i { transform: translateY(-3px); }
+
+/* --- Desktop Navigation --- */
+@media (min-width: 769px) {
+  main.container {
+    padding: 40px 32px;
+    padding-bottom: 40px;
+  }
+  
+  #bottom-nav { display: none !important; }
+  
+  header#header { 
+    padding: 16px 32px; 
+    height: 72px; 
+  }
+  .header-logo { position: static; transform: none; margin-right: 24px; }
+  .header-spacer { display: none; }
+  
+  #topnav { 
+    display: flex !important; 
+    gap: 12px;
+    
+    margin-left: auto;
+  }
+  
+  #topnav .nav-link { 
+    padding: 8px 16px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    color: var(--text-secondary); 
+    font-weight: 500; 
+    transition: all 0.2s;
+   
+    border: 1px solid transparent;
+  }
+  #topnav .nav-link:hover { 
+    background: rgba(118, 118, 128, 0.1); 
+    color: var(--text-primary);
+    border-color: var(--accent);
+  }
+  #topnav .nav-link.active { 
+    background: var(--accent); 
+    color: #fff;
+    border-color: var(--accent);
+  }
+  
+  .card:hover {
+    transform: translate3d(0, -4px, 10px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* --- Mobile (< 768px) --- */
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+  
+  main.container { 
+    padding: 16px 12px;
+    padding-bottom: 80px;
+  }
+  
+  .card { 
+    padding: 16px; 
+    border-radius: 16px;
+    animation: cardEntrance 0.5s var(--ease-ios) backwards;
+  }
+  
+  #auth.card { 
+    max-width: 100%;
+    margin: 20px auto; 
+    padding: 24px 16px; 
+    width: 100%; 
+  }
+  
+  .h1 { font-size: 20px; }
+  
+  .card [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  
+  .space-between { 
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn, .btn-ghost { 
+    padding: 12px 16px; 
+    font-size: 16px; 
+    justify-content: center;
+    min-height: 44px;
+  }
+  
+  header#header { height: 60px; }
+  #topnav { display: none !important; }
+}
+
+/* --- Extra Small (< 480px) --- */
+@media (max-width: 768px) {
+  .container {
+    width: 95%;
+    padding: 0.5rem;
+  }
+
+  .button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  p { font-size: 0.9rem; }
+
+  .card {
+    padding: 0.75rem;
+  }
+}
+/* --- Landscape --- */
+@media (orientation: landscape) and (max-height: 500px) {
+  header#header { height: 48px; padding: 6px 16px; }
+  main.container { padding-bottom: 60px; }
+  #bottom-nav { height: 50px; }
+  .nav-item { font-size: 10px; }
+  .nav-item i { font-size: 18px; }
+}
+
+/* --- High DPI / Retina --- */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  * { -webkit-font-smoothing: subpixel-antialiased; }
+}
+
+/* --- Touch Devices --- */
+@media (hover: none) and (pointer: coarse) {
+  .btn, .btn-ghost { min-height: 44px; }
+  .btn:active { transform: scale(0.96); }
+  .card:hover { transform: none; }
+}
+
+/* --- Accessibility --- */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+/* --- iOS Enhancement Pack --- */
+
+/* 1. Покращений глянець карток (як у iOS 17 widgets) */
+.card {
+  position: relative;
+  isolation: isolate;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.03),
+    rgba(255,255,255,0.01) 40%,
+    rgba(0,0,0,0.15) 100%
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+  z-index: -1;
+}
+
+/* 2. Soft highlight зверху картки — як на iOS panels */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.10),
+    transparent
+  );
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  opacity: 0.4;
+}
+
+/* 3. Плавніші тіні iOS */
+.card {
+  box-shadow:
+    0 4px 10px rgba(0,0,0,0.25),
+    0 1px 2px rgba(255,255,255,0.02) inset;
+  transition: transform 0.25s var(--ease-ios), box-shadow 0.3s var(--ease-ios);
+}
+
+/* 4. Ефект підняття картки на hover (тільки desktop) */
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow:
+      0 16px 30px rgba(0,0,0,0.45),
+      0 4px 8px rgba(0,0,0,0.25);
+  }
+}
+
+/* 5. Кнопки iOS – більш “system-like” */
+.btn {
+  border-radius: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 4px 10px rgba(0,0,0,0.25);
+}
+
+.btn:active {
+  transform: scale(0.97) translateY(1px);
+  filter: brightness(0.92);
+}
+
+/* Ghost кнопки, як у iOS settings */
+.btn-ghost {
+  background: rgba(118,118,128,0.16);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.btn-ghost:active {
+  background: rgba(118,118,128,0.26);
+}
+
+/* 6. Поліпшений інпут: більш схожий на iOS Messages/Forms */
+.field input,
+.field textarea,
+.field select {
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
+  backdrop-filter: blur(20px);
+  transition: all 0.2s var(--ease-ios), border-color 0.12s;
+}
+
+/* Підсвітка focus більш iOS */
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 4px rgba(10,132,255,0.25);
+}
+
+/* 7. Floating-label — більше схоже на Apple Pay поля */
+.field input:not(:placeholder-shown) + .floating-label,
+.field input:focus + .floating-label {
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  padding: 0 6px;
+  border-radius: 6px;
+}
+
+/* 8. Bottom Tab Bar — плавна анімація iOS */
+.nav-item.active i {
+  transform: translateY(-4px) scale(1.12);
+  transition: transform 0.25s var(--bounce-ios);
+}
+
+/* 9. Легке відбиття світла на header */
+header#header {
+  background: rgba(28, 28, 30, 0.88);
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,0.05) inset,
+    0 8px 18px rgba(0,0,0,0.4);
+}
+/* Hide back button on desktop */
+@media (min-width: 768px) {
+  .btn-back {
+    display: none !important;
+  }
+}
+html, body {
+  overflow-x: hidden !important;
+}
+* {
+  box-sizing: border-box;
+}
+#transactions-page {
+  overflow-x: hidden;
+}
+/* Transactions table wrapper — ФІКСОВАНИЙ БЕЗ ЗАЙВИХ СКРОЛІВ */
+.table-wrapper {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: 400px;
+  border-radius: 12px;
+}
+
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background: var(--card-bg);
+  z-index: 10;
+}
+
+th {
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 12px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  font-size: 14px;
+}
+
+tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+/* Скролбар — акуратний */
+.table-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Firefox */
+.table-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+/* Мобільні */
+@media (max-width: 768px) {
+  .table-wrapper { max-height: 300px; }
+  th, td { padding: 10px 6px; font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+  .table-wrapper { max-height: 250px; }
+  th, td { padding: 8px 4px; font-size: 12px; }
+}
+/* Стиль для input[type="date"] */
+#tx-date {
+  width: 200px;           /* ширина поля */
+  padding: 8px 12px;      /* внутрішні відступи */
+  border: 1px solid #ccc; /* світло-сіра рамка */
+  border-radius: 8px;     /* заокруглені кути */
+  font-size: 16px;        /* розмір шрифту */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9f9f9; /* світлий фон */
+  transition: all 0.2s ease-in-out;
+}
+
+/* Ефект при фокусі */
+#tx-date:focus {
+  border-color: #0A84FF;  /* синя рамка при фокусі */
+  background-color: #fff;  /* трохи світліший фон */
+  box-shadow: 0 0 5px rgba(10, 132, 255, 0.5);
+  outline: none;           /* прибираємо стандартний outline */
+  color: #000;
+}
+
+/* Курсор при наведенні */
+#tx-date:hover {
+  border-color: #0A84FF;
+  cursor: pointer;
+}
