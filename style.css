@@ -126,6 +126,23 @@ input:focus, select:focus, textarea:focus {
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.12s ease;
 }
+
+/* Dark-theme friendly selects and dropdowns */
+select, .field select, .modal select {
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 12px;
+  border-radius: 10px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+select:focus, .field select:focus, .modal select:focus { outline: none; box-shadow: 0 0 0 4px rgba(10,132,255,0.10); }
+select option { background: rgba(28,28,30,0.98); color: var(--text); }
+.modal .modal-content select { width: 100%; }
+
+/* Make select inside small inline rows look clear */
+.row select { min-width: 140px; }
 .field input::placeholder { color: transparent; } /* keep visual placeholder hidden, use label */
 
 .floating-label {
@@ -199,6 +216,48 @@ background-color: var(--accent);
 }
 .btn-ghost:hover { background: rgba(118, 118, 128, 0.24); }
 .btn-ghost.small { padding: 6px 12px; font-size: 13px; }
+
+/* Simple modal styles so showModal is visible */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.78); /* darker overlay for better contrast */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 2200;
+}
+.modal-content {
+  background: linear-gradient(180deg, rgba(30,30,32,0.95), rgba(28,28,30,0.9));
+  padding: 20px 20px 16px 20px;
+  border-radius: 12px;
+  width: 92%;
+  max-width: 560px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+  z-index: 2300;
+  transform: translateY(0);
+  animation: modalPop 220ms cubic-bezier(.2,.9,.3,1);
+}
+.modal .close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  cursor: pointer;
+  color: var(--accent);
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.modal .close { position: absolute; right: 18px; top: 12px; cursor: pointer; color: var(--accent); }
+
+@keyframes modalPop {
+  from { transform: translateY(10px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
 
 /* Tables */
 table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15px; }

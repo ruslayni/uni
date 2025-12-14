@@ -126,6 +126,9 @@
             <input id="tx-amount" type="number" step="0.01" placeholder="Сума (153.20)" />
             <input id="tx-desc" type="text" placeholder="Опис (Покупка в АТБ)" />
             <select id="tx-card"></select>
+            <select id="tx-goal">
+              <option value="">Прив'язати до цілі (необов'язково)</option>
+            </select>
             <input id="tx-date" type="date" />
             <input id="tx-cat" type="text" placeholder="Категорія (Продукти)" />
             <div class="row">
@@ -142,6 +145,7 @@
           <div class="muted small">Додайте картки для асоціації транзакцій</div>
           <div style="margin-top: 8px; display: grid; grid-template-columns: 1fr auto; gap: 8px;">
             <input id="card-name" type="text" placeholder="Назва (наприклад, Monobank)" />
+            <input id="card-balance" type="number" step="0.01" placeholder="Баланс (0.00)" style="width:120px" />
             <button class="btn" id="btn-add-card"><i class="fas fa-credit-card"></i> Додати</button>
           </div>
           <div style="margin-top: 12px;" id="cards-list"></div>

@@ -9,7 +9,7 @@ let currentUser = null;
 
 function createUser(username, password) {
   if (loadUserData(username)) throw new Error('Користувач вже існує');
-  const user = { username, passwordHash: hash(password), cards: [], transactions: [], rules: [], createdAt: new Date().toISOString() };
+  const user = { username, passwordHash: hash(password), cards: [], transactions: [], rules: [], goals: [], createdAt: new Date().toISOString() };
   saveUserData(username, user);
   return user;
 }
@@ -36,7 +36,9 @@ const userDisplayProfile = document.getElementById('user-display-profile');
 const txTable = document.getElementById('tx-table');
 const cardsList = document.getElementById('cards-list');
 const txCardSelect = document.getElementById('tx-card');
+const txGoalSelect = document.getElementById('tx-goal');
 const rulesList = document.getElementById('rules-list');
+const goalsList = document.getElementById('goals-list');
 const smsText = document.getElementById('sms-text');
 const chartBalanceEl = document.getElementById('chart-balance');
 const chartCatsEl = document.getElementById('chart-cats');
@@ -78,10 +80,35 @@ function renderAll() {
   if (userDisplay) userDisplay.textContent = currentUser.username;
   if (userDisplayProfile) userDisplayProfile.textContent = currentUser.username;
   renderCards();
+  renderGoals();
   renderRules();
   renderTxTable();
   renderCharts();
   updateTxCardOptions();
+  updateTxGoalOptions();
+}
+
+function renderGoals() {
+  if (!goalsList) return;
+  goalsList.innerHTML = '';
+  if (!currentUser || !currentUser.goals || currentUser.goals.length === 0) { goalsList.innerHTML = '<div class="muted center">Немає цілей</div>'; return; }
+  currentUser.goals.forEach(g => {
+    const el = document.createElement('div');
+    el.style.display = 'flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'space-between';
+    el.style.gap = '8px';
+    const saved = Number(g.saved || 0);
+    const target = Number(g.target || 0) || 0;
+    const pct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
+    el.innerHTML = `<div style="flex:1">
+        <div style="font-weight:600">${escapeHtml(g.title || 'Ціль')}</div>
+        <div class="muted small">${fmtAmount(saved)} / ${fmtAmount(target)} грн — ${pct}%</div>
+        <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:6px;margin-top:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#0A84FF,#3b82f6)"></div></div>
+      </div>
+      <div style="display:flex;gap:6px"><button class="btn-ghost" data-act="contribute-goal" data-id="${g.id}">Поповнити</button><button class="btn-ghost" data-act="del-goal" data-id="${g.id}"><i class="fas fa-trash"></i></button></div>`;
+    goalsList.appendChild(el);
+  });
 }
 
 function renderCards() {
@@ -92,7 +119,8 @@ function renderCards() {
     const el = document.createElement('div');
     el.className = 'row space-between';
     el.style.margin = '6px 0';
-    el.innerHTML = `<div class="pill"><i class="fas fa-credit-card"></i> ${escapeHtml(c.name)}</div><button class="btn-ghost" data-id="${c.id}" data-act="del-card"><i class="fas fa-trash"></i> Видалити</button>`;
+    const balStr = fmtAmount(Number(c.balance || 0));
+    el.innerHTML = `<div class="pill"><i class="fas fa-credit-card"></i> ${escapeHtml(c.name)} — ${balStr} грн</div><div><button class="btn-ghost" data-id="${c.id}" data-act="del-card"><i class="fas fa-trash"></i> Видалити</button></div>`;
     cardsList.appendChild(el);
   });
 }
@@ -120,7 +148,14 @@ function renderTxTable(filter = '') {
     const tr = document.createElement('tr');
     const sign = tx.type === 'expense' ? '-' : '+';
     const color = tx.type === 'expense' ? 'color: var(--error);' : 'color: var(--success);';
-    tr.innerHTML = `<td>${escapeHtml(tx.date)}</td><td>${escapeHtml(tx.description || '')}</td><td>${escapeHtml(tx.category || 'Без категорії')}</td><td style="${color}">${sign}${fmtAmount(tx.amount)}</td><td>${escapeHtml(tx.card || 'Без карти')}</td><td class="actions"><button class="btn-ghost" data-act="edit-tx" data-id="${tx.id}"><i class="fas fa-edit"></i></button><button class="btn-ghost" data-act="del-tx" data-id="${tx.id}"><i class="fas fa-trash"></i></button></td>`;
+    // resolve card name from id or legacy name
+    let cardName = 'Без карти';
+    if (tx.card) {
+      const card = currentUser.cards.find(c => c.id === tx.card || c.name === tx.card);
+      if (card) cardName = `${card.name} (${fmtAmount(Number(card.balance||0))} грн)`;
+      else cardName = tx.card;
+    }
+    tr.innerHTML = `<td>${escapeHtml(tx.date)}</td><td>${escapeHtml(tx.description || '')}</td><td>${escapeHtml(tx.category || 'Без категорії')}</td><td style="${color}">${sign}${fmtAmount(tx.amount)}</td><td>${escapeHtml(cardName)}</td><td class="actions"><button class="btn-ghost" data-act="edit-tx" data-id="${tx.id}"><i class="fas fa-edit"></i></button><button class="btn-ghost" data-act="del-tx" data-id="${tx.id}"><i class="fas fa-trash"></i></button></td>`;
     txTable.appendChild(tr);
   });
 }
@@ -156,7 +191,13 @@ function renderCharts() {
     chartCats.update();
   }
 
-  const bal = txs.reduce((s, tx) => s + (tx.type === 'income' ? Number(tx.amount) : -Number(tx.amount)), 0);
+  // overall balance: prefer explicit card balances if present, otherwise compute from transactions
+  let bal = 0;
+  if (currentUser.cards && currentUser.cards.length) {
+    bal = currentUser.cards.reduce((s, c) => s + (Number(c.balance) || 0), 0);
+  } else {
+    bal = txs.reduce((s, tx) => s + (tx.type === 'income' ? Number(tx.amount) : -Number(tx.amount)), 0);
+  }
   const balEl = document.getElementById('today-balance');
   if (balEl) balEl.textContent = `Баланс: ${fmtAmount(bal)} грн`;
 }
@@ -167,9 +208,23 @@ function updateTxCardOptions() {
   if (!currentUser) return;
   currentUser.cards.forEach(c => {
     const o = document.createElement('option');
-    o.value = c.name;
-    o.textContent = c.name;
+    o.value = c.id;
+    o.textContent = `${c.name} (${fmtAmount(Number(c.balance||0))} грн)`;
     txCardSelect.appendChild(o);
+  });
+  // also update goal options if present
+  updateTxGoalOptions();
+}
+
+function updateTxGoalOptions() {
+  if (!txGoalSelect) return;
+  txGoalSelect.innerHTML = '<option value="">Прив\'язати до цілі (необов\'язково)</option>';
+  if (!currentUser || !currentUser.goals) return;
+  currentUser.goals.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g.id;
+    o.textContent = `${g.title} — ${fmtAmount(Number(g.saved||0))}/${fmtAmount(Number(g.target||0))} грн`;
+    txGoalSelect.appendChild(o);
   });
 }
 
@@ -182,7 +237,16 @@ function showModal(title, content, onSave = null) {
   modals.appendChild(modal);
   modal.querySelector('.close').addEventListener('click', () => modal.remove());
   modal.querySelector('#modal-cancel').addEventListener('click', () => modal.remove());
-  if (onSave) modal.querySelector('#modal-save').addEventListener('click', () => { onSave(); modal.remove(); });
+  if (onSave) modal.querySelector('#modal-save').addEventListener('click', () => {
+    try {
+      onSave();
+    } catch (err) {
+      console.error('Modal save error', err);
+      alert('Помилка при збереженні: ' + (err && err.message ? err.message : err));
+      return;
+    }
+    modal.remove();
+  });
   return modal;
 }
 
@@ -218,6 +282,8 @@ if (btnLogin) btnLogin.addEventListener('click', () => {
   const p = (document.getElementById('login-password') || {}).value || '';
   try {
     currentUser = loginUser(u, p);
+    // ensure backward compatibility: always have goals array
+    currentUser.goals = currentUser.goals || [];
     if (authSection) authSection.classList.add('hidden');
     if (appSection) appSection.classList.remove('hidden');
     if (bottomNav) bottomNav.classList.remove('hidden');
@@ -249,13 +315,14 @@ if (btnSample) btnSample.addEventListener('click', () => {
     const user = {
       username: u,
       passwordHash: hash(p),
-      cards: [{ id: uid('card'), name: 'Monobank' }, { id: uid('card'), name: 'PrivatBank' }],
+      cards: [{ id: uid('card'), name: 'Monobank', balance: 5000 }, { id: uid('card'), name: 'PrivatBank', balance: 1200 }],
       transactions: [
         { id: uid('tx'), date: todayISO(), description: 'Зарплата', amount: 15000, type: 'income', category: 'Зарплата', card: 'Monobank' },
         { id: uid('tx'), date: todayISO(), description: 'Покупка в АТБ', amount: 245.7, type: 'expense', category: 'Продукти', card: 'PrivatBank' },
         { id: uid('tx'), date: todayISO(), description: 'Кава', amount: 45.5, type: 'expense', category: 'Їжа', card: 'Monobank' }
       ],
-      rules: [{ id: uid('rule'), keyword: 'АТБ', category: 'Продукти' }, { id: uid('rule'), keyword: 'зарплат', category: 'Зарплата' }, { id: uid('rule'), keyword: 'кава', category: 'Їжа' }]
+      rules: [{ id: uid('rule'), keyword: 'АТБ', category: 'Продукти' }, { id: uid('rule'), keyword: 'зарплат', category: 'Зарплата' }, { id: uid('rule'), keyword: 'кава', category: 'Їжа' }],
+      goals: [{ id: uid('goal'), title: 'Купити ноутбук', target: 30000, saved: 5000, due: '' }]
     };
     saveUserData(u, user);
     showAlert(authAlert, 'Демо-дані створені. Увійдіть.', 'success');
@@ -271,9 +338,11 @@ const btnAddCard = document.getElementById('btn-add-card');
 if (btnAddCard) btnAddCard.addEventListener('click', () => {
   const name = (document.getElementById('card-name') || {}).value.trim();
   if (!name) return alert('Вкажіть назву');
-  currentUser.cards.push({ id: uid('card'), name });
+  const bal = parseFloat((document.getElementById('card-balance') || {}).value) || 0;
+  currentUser.cards.push({ id: uid('card'), name, balance: Number(fmtAmount(bal)) });
   saveUserData(currentUser.username, currentUser);
   document.getElementById('card-name').value = '';
+  const cb = document.getElementById('card-balance'); if (cb) cb.value = '';
   renderAll();
 });
 
@@ -287,6 +356,29 @@ if (btnAddRule) btnAddRule.addEventListener('click', () => {
   document.getElementById('rule-keyword').value = '';
   document.getElementById('rule-category').value = '';
   renderAll();
+});
+
+const btnAddGoal = document.getElementById('btn-add-goal');
+if (btnAddGoal) btnAddGoal.addEventListener('click', () => {
+  if (!currentUser) { alert('Спершу увійдіть у акаунт'); return; }
+  const content = `
+    <input id="goal-title" type="text" placeholder="Назва цілі" />
+    <input id="goal-target" type="number" step="0.01" placeholder="Мета (грн)" />
+    <input id="goal-saved" type="number" step="0.01" placeholder="Початковий внесок (грн)" />
+    <input id="goal-date" type="date" />`;
+  const modal = showModal('Додати ціль', content, () => {
+    const title = (document.getElementById('goal-title') || {}).value.trim() || 'Ціль';
+    const target = parseFloat((document.getElementById('goal-target') || {}).value) || 0;
+    const saved = parseFloat((document.getElementById('goal-saved') || {}).value) || 0;
+    const due = (document.getElementById('goal-date') || {}).value || '';
+    currentUser.goals = currentUser.goals || [];
+    currentUser.goals.push({ id: uid('goal'), title, target: Number(fmtAmount(target)), saved: Number(fmtAmount(saved)), due });
+    saveUserData(currentUser.username, currentUser);
+    renderAll();
+  });
+  if (modal) {
+    const inp = modal.querySelector('#goal-title'); if (inp) inp.focus();
+  }
 });
 
 /* Delegated click handler (works if click hits inner icon etc.) */
@@ -304,8 +396,58 @@ document.addEventListener('click', (e) => {
     currentUser.rules = currentUser.rules.filter(r => r.id !== id);
     saveUserData(currentUser.username, currentUser);
     renderAll();
+  } else if (act === 'del-goal') {
+    if (!confirm('Видалити ціль?')) return;
+    currentUser.goals = currentUser.goals.filter(g => g.id !== id);
+    saveUserData(currentUser.username, currentUser);
+    renderAll();
+  } else if (act === 'contribute-goal') {
+    const g = currentUser.goals.find(x => x.id === id);
+    if (!g) return;
+    // Redirect to transactions tab and prefill fields for contributing to this goal
+    showTab('tab-transactions');
+    // Ensure transaction form elements exist
+    const tType = document.getElementById('tx-type');
+    const tAmount = document.getElementById('tx-amount');
+    const tDesc = document.getElementById('tx-desc');
+    const tCard = document.getElementById('tx-card');
+    const tCat = document.getElementById('tx-cat');
+    const tDate = document.getElementById('tx-date');
+    if (tType) tType.value = 'expense';
+    if (tDesc) tDesc.value = `Поповнення: ${g.title}`;
+    if (tCat) tCat.value = g.title || '';
+    // preselect first card if available
+    if (tCard && currentUser.cards && currentUser.cards.length) {
+      // set value to first card id
+      tCard.value = currentUser.cards[0].id;
+    }
+    if (tAmount) { tAmount.value = ''; tAmount.focus(); }
+    if (tDate) tDate.value = todayISO();
+    // optionally store a temp marker so save handler knows this tx is for a goal
+    // we'll use window.__prefill_goal_id
+    window.__prefill_goal_id = g.id;
+    // if tx-goal select exists, ensure options updated and set it too
+    updateTxGoalOptions();
+    const tGoal = document.getElementById('tx-goal');
+    if (tGoal) tGoal.value = g.id;
   } else if (act === 'del-tx') {
     if (!confirm('Видалити транзакцію?')) return;
+    const tx = currentUser.transactions.find(t => t.id === id);
+    if (tx && tx.card) {
+      const cardObj = currentUser.cards.find(c => c.id === tx.card || c.name === tx.card);
+      if (cardObj) {
+        // reverse tx effect
+        const amt = Number(tx.amount || 0);
+        cardObj.balance = Number(fmtAmount((Number(cardObj.balance || 0) + (tx.type === 'income' ? -amt : amt))));
+      }
+    }
+    // reverse goal contribution if this tx was contributing to a goal (category matches goal title)
+    try {
+      const goal = currentUser.goals && currentUser.goals.find(g => g.title === tx.category || g.id === tx.category);
+      if (goal && tx.type === 'expense') {
+        goal.saved = Number(fmtAmount(Math.max(0, Number(goal.saved || 0) - Number(tx.amount || 0))));
+      }
+    } catch (e) { console.warn('Goal reverse error', e); }
     currentUser.transactions = currentUser.transactions.filter(t => t.id !== id);
     saveUserData(currentUser.username, currentUser);
     renderAll();
@@ -327,12 +469,68 @@ document.addEventListener('click', (e) => {
       const newDate = document.getElementById('edit-date').value || todayISO();
       const newCat = document.getElementById('edit-cat').value.trim();
       if (isNaN(newAmount) || newAmount <= 0) return alert('Некоректна сума');
+
+      // prepare references and prospective balances (do not mutate yet)
+      const oldCardId = tx.card;
+      const oldAmount = Number(tx.amount || 0);
+      const oldType = tx.type;
+      const oldCard = oldCardId ? currentUser.cards.find(c => c.id === oldCardId || c.name === oldCardId) : null;
+      const newCardObj = newCard ? currentUser.cards.find(c => c.id === newCard || c.name === newCard) : null;
+
+      // compute balance after reversing old tx (if oldCard exists)
+      const revOldBal = oldCard ? (Number(oldCard.balance || 0) + (oldType === 'income' ? -oldAmount : oldAmount)) : null;
+
+      // compute prospective new balance for newCardObj
+      let prospectiveNewBal = null;
+      if (newCardObj) {
+        if (oldCard && newCardObj.id === oldCard.id) {
+          // same card: apply reversal then new amount
+          prospectiveNewBal = revOldBal + (newType === 'income' ? Number(newAmount) : -Number(newAmount));
+        } else {
+          prospectiveNewBal = Number(newCardObj.balance || 0) + (newType === 'income' ? Number(newAmount) : -Number(newAmount));
+        }
+      }
+
+      // if prospective balance would go negative, ask for confirmation
+      if (prospectiveNewBal !== null && prospectiveNewBal < 0) {
+        const ok = confirm(`На картці "${newCardObj.name}" буде баланс ${fmtAmount(prospectiveNewBal)} грн після редагування. Продовжити?`);
+        if (!ok) return; // abort without changing anything
+      }
+
+      // safe to apply: reverse old card effect (if any)
+      if (oldCard) {
+        oldCard.balance = Number(fmtAmount(revOldBal));
+      }
+
+      // reverse old goal contribution if any
+      try {
+        const oldGoal = currentUser.goals && currentUser.goals.find(g => g.title === tx.category || g.id === tx.category);
+        if (oldGoal && oldType === 'expense') {
+          oldGoal.saved = Number(fmtAmount(Math.max(0, Number(oldGoal.saved || 0) - Number(oldAmount || 0))));
+        }
+      } catch (e) { console.warn('Goal reverse on edit error', e); }
+
+      // apply new values to tx
       tx.type = newType;
       tx.amount = newAmount;
       tx.description = newDesc;
       tx.card = newCard;
       tx.date = newDate;
       tx.category = newCat;
+
+      // apply new tx effect to selected card
+      if (newCardObj) {
+        newCardObj.balance = Number(fmtAmount(prospectiveNewBal));
+      }
+
+      // apply new goal contribution if category matches a goal
+      try {
+        const newGoal = currentUser.goals && currentUser.goals.find(g => g.title === tx.category || g.id === tx.category || g.title === newCat);
+        if (newGoal && newType === 'expense') {
+          newGoal.saved = Number(fmtAmount(Number(newGoal.saved || 0) + Number(newAmount)));
+        }
+      } catch (e) { console.warn('Goal apply on edit error', e); }
+
       saveUserData(currentUser.username, currentUser);
       renderAll();
     });
@@ -348,18 +546,51 @@ if (btnSaveTx) btnSaveTx.addEventListener('click', () => {
   const desc = (document.getElementById('tx-desc') || {}).value.trim();
   const card = (document.getElementById('tx-card') || {}).value;
   const date = (document.getElementById('tx-date') || {}).value || todayISO();
-  const cat = (document.getElementById('tx-cat') || {}).value.trim();
+  // if a goal is selected, prefer it as category
+  const txGoalVal = (document.getElementById('tx-goal') || {}).value || '';
+  const catInput = (document.getElementById('tx-cat') || {});
+  let cat = (catInput.value || '').trim();
+  if (txGoalVal) {
+    const goalObj = currentUser.goals && currentUser.goals.find(g => g.id === txGoalVal);
+    if (goalObj) cat = goalObj.title || cat;
+  }
   if (isNaN(amount) || amount <= 0 || !desc) return alert('Заповніть суму та опис');
   const newTx = { id: uid('tx'), date, description: desc, amount, type, category: cat, card };
   applyRulesToTx(newTx);
+  // update card balance if transaction associated with a card (card is card id)
+  if (card) {
+    const cardObj = currentUser.cards.find(c => c.id === card || c.name === card);
+    if (cardObj) {
+      const oldBal = Number(cardObj.balance || 0);
+      const newBal = type === 'income' ? oldBal + Number(amount) : oldBal - Number(amount);
+      if (newBal < 0) {
+        const ok = confirm(`На картці "${cardObj.name}" буде баланс ${fmtAmount(newBal)} грн. Продовжити з дозволом негативного балансу?`);
+        if (!ok) return;
+      }
+      cardObj.balance = Number(fmtAmount(newBal));
+    }
+  }
   currentUser.transactions.push(newTx);
+  // If this transaction was prefilling a goal contribution (or chosen via tx-goal), credit the goal.saved
+  try {
+    const gid = txGoalVal || window.__prefill_goal_id;
+    if (gid) {
+      const goal = currentUser.goals && currentUser.goals.find(g => g.id === gid || g.title === cat);
+      if (goal && type === 'expense') {
+        goal.saved = Number(fmtAmount(Number(goal.saved || 0) + Number(amount)));
+        // clear prefill marker after applying
+        delete window.__prefill_goal_id;
+        saveUserData(currentUser.username, currentUser);
+      }
+    }
+  } catch (e) { console.warn('Goal apply error', e); }
   saveUserData(currentUser.username, currentUser);
   resetQuickForm();
   renderAll();
 });
 
 function resetQuickForm() {
-  const ids = ['tx-amount','tx-desc','tx-date','tx-cat','tx-card','tx-type'];
+  const ids = ['tx-amount','tx-desc','tx-date','tx-cat','tx-card','tx-type','tx-goal'];
   ids.forEach(id => { const el = document.getElementById(id); if (el) { if (id==='tx-type') el.value='expense'; else el.value=''; } });
 }
 
