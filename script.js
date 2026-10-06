@@ -1,4 +1,4 @@
-// script.js — Повна логіка від посилання + мобільна навігація (виправлений)
+// script.js — Full logic + mobile navigation
 
 const STORE_KEY_PREFIX = 'pf_demo_v3_';
 
@@ -8,7 +8,7 @@ function loadUserData(username) { const raw = localStorage.getItem(STORE_KEY_PRE
 let currentUser = null;
 
 function createUser(username, password) {
-  if (loadUserData(username)) throw new Error('Користувач вже існує');
+  if (loadUserData(username)) throw new Error('User already exists');
   const user = { username, passwordHash: hash(password), cards: [], transactions: [], rules: [], goals: [], createdAt: new Date().toISOString() };
   saveUserData(username, user);
   return user;
@@ -16,8 +16,8 @@ function createUser(username, password) {
 
 function loginUser(username, password) {
   const u = loadUserData(username);
-  if (!u) throw new Error('Користувача не знайдено');
-  if (u.passwordHash !== hash(password)) throw new Error('Невірний пароль');
+  if (!u) throw new Error('User not found');
+  if (u.passwordHash !== hash(password)) throw new Error('Invalid password');
   return u;
 }
 
@@ -27,7 +27,7 @@ function uid(prefix = 'id') { return prefix + '_' + Math.random().toString(36).s
 function fmtAmount(a) { return Number(a).toFixed(2); }
 function todayISO(d = new Date()) { return d.toISOString().slice(0, 10); }
 
-/* UI Elements — обережно: деякі елементи можуть бути відсутніми на сторінці */
+/* UI Elements */
 const authSection = document.getElementById('auth');
 const appSection = document.getElementById('app');
 const bottomNav = document.getElementById('bottom-nav');
@@ -56,7 +56,7 @@ function initCharts() {
       const ctx = chartBalanceEl.getContext('2d');
       chartBalance = new Chart(ctx, {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Баланс', data: [], fill: true, tension: 0.4 }] },
+        data: { labels: [], datasets: [{ label: 'Balance', data: [], fill: true, tension: 0.4 }] },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false } } }
       });
     }
@@ -91,7 +91,7 @@ function renderAll() {
 function renderGoals() {
   if (!goalsList) return;
   goalsList.innerHTML = '';
-  if (!currentUser || !currentUser.goals || currentUser.goals.length === 0) { goalsList.innerHTML = '<div class="muted center">Немає цілей</div>'; return; }
+  if (!currentUser || !currentUser.goals || currentUser.goals.length === 0) { goalsList.innerHTML = '<div class="muted center">No goals</div>'; return; }
   currentUser.goals.forEach(g => {
     const el = document.createElement('div');
     el.style.display = 'flex';
@@ -102,11 +102,11 @@ function renderGoals() {
     const target = Number(g.target || 0) || 0;
     const pct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
     el.innerHTML = `<div style="flex:1">
-        <div style="font-weight:600">${escapeHtml(g.title || 'Ціль')}</div>
-        <div class="muted small">${fmtAmount(saved)} / ${fmtAmount(target)} грн — ${pct}%</div>
+        <div style="font-weight:600">${escapeHtml(g.title || 'Goal')}</div>
+        <div class="muted small">${fmtAmount(saved)} / ${fmtAmount(target)} — ${pct}%</div>
         <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:6px;margin-top:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#0A84FF,#3b82f6)"></div></div>
       </div>
-      <div style="display:flex;gap:6px"><button class="btn-ghost" data-act="contribute-goal" data-id="${g.id}">Поповнити</button><button class="btn-ghost" data-act="del-goal" data-id="${g.id}"><i class="fas fa-trash"></i></button></div>`;
+      <div style="display:flex;gap:6px"><button class="btn-ghost" data-act="contribute-goal" data-id="${g.id}">Contribute</button><button class="btn-ghost" data-act="del-goal" data-id="${g.id}"><i class="fas fa-trash"></i></button></div>`;
     goalsList.appendChild(el);
   });
 }
@@ -114,13 +114,13 @@ function renderGoals() {
 function renderCards() {
   if (!cardsList) return;
   cardsList.innerHTML = '';
-  if (!currentUser || currentUser.cards.length === 0) { cardsList.innerHTML = '<div class="muted center">Немає карток</div>'; return; }
+  if (!currentUser || currentUser.cards.length === 0) { cardsList.innerHTML = '<div class="muted center">No cards</div>'; return; }
   currentUser.cards.forEach(c => {
     const el = document.createElement('div');
     el.className = 'row space-between';
     el.style.margin = '6px 0';
     const balStr = fmtAmount(Number(c.balance || 0));
-    el.innerHTML = `<div class="pill"><i class="fas fa-credit-card"></i> ${escapeHtml(c.name)} — ${balStr} грн</div><div><button class="btn-ghost" data-id="${c.id}" data-act="del-card"><i class="fas fa-trash"></i> Видалити</button></div>`;
+    el.innerHTML = `<div class="pill"><i class="fas fa-credit-card"></i> ${escapeHtml(c.name)} — ${balStr}</div><div><button class="btn-ghost" data-id="${c.id}" data-act="del-card"><i class="fas fa-trash"></i> Delete</button></div>`;
     cardsList.appendChild(el);
   });
 }
@@ -128,11 +128,11 @@ function renderCards() {
 function renderRules() {
   if (!rulesList) return;
   rulesList.innerHTML = '';
-  if (!currentUser || currentUser.rules.length === 0) { rulesList.innerHTML = '<div class="muted center">Немає правил</div>'; return; }
+  if (!currentUser || currentUser.rules.length === 0) { rulesList.innerHTML = '<div class="muted center">No rules</div>'; return; }
   currentUser.rules.forEach(r => {
     const el = document.createElement('div');
     el.className = 'rule';
-    el.innerHTML = `<div style="flex:1"><i class="fas fa-tag"></i> Якщо містить "<strong">${escapeHtml(r.keyword)}</strong>" → <strong>${escapeHtml(r.category)}</strong></div><button class="btn-ghost" data-act="del-rule" data-id="${r.id}"><i class="fas fa-trash"></i></button>`;
+    el.innerHTML = `<div style="flex:1"><i class="fas fa-tag"></i> If contains "<strong">${escapeHtml(r.keyword)}</strong>" → <strong>${escapeHtml(r.category)}</strong></div><button class="btn-ghost" data-act="del-rule" data-id="${r.id}"><i class="fas fa-trash"></i></button>`;
     rulesList.appendChild(el);
   });
 }
@@ -143,19 +143,19 @@ function renderTxTable(filter = '') {
   if (!currentUser) return;
   const txs = currentUser.transactions.slice().sort((a, b) => new Date(b.date) - new Date(a.date))
     .filter(tx => (tx.description || '').toLowerCase().includes(filter.toLowerCase()) || ((tx.category||'').toLowerCase().includes(filter.toLowerCase())));
-  if (txs.length === 0) { txTable.innerHTML = '<tr><td colspan="6" class="muted center">Немає транзакцій</td></tr>'; return; }
+  if (txs.length === 0) { txTable.innerHTML = '<tr><td colspan="6" class="muted center">No transactions</td></tr>'; return; }
   txs.forEach(tx => {
     const tr = document.createElement('tr');
     const sign = tx.type === 'expense' ? '-' : '+';
     const color = tx.type === 'expense' ? 'color: var(--error);' : 'color: var(--success);';
     // resolve card name from id or legacy name
-    let cardName = 'Без карти';
+    let cardName = 'No card';
     if (tx.card) {
       const card = currentUser.cards.find(c => c.id === tx.card || c.name === tx.card);
-      if (card) cardName = `${card.name} (${fmtAmount(Number(card.balance||0))} грн)`;
+      if (card) cardName = `${card.name} (${fmtAmount(Number(card.balance||0))})`;
       else cardName = tx.card;
     }
-    tr.innerHTML = `<td>${escapeHtml(tx.date)}</td><td>${escapeHtml(tx.description || '')}</td><td>${escapeHtml(tx.category || 'Без категорії')}</td><td style="${color}">${sign}${fmtAmount(tx.amount)}</td><td>${escapeHtml(cardName)}</td><td class="actions"><button class="btn-ghost" data-act="edit-tx" data-id="${tx.id}"><i class="fas fa-edit"></i></button><button class="btn-ghost" data-act="del-tx" data-id="${tx.id}"><i class="fas fa-trash"></i></button></td>`;
+    tr.innerHTML = `<td>${escapeHtml(tx.date)}</td><td>${escapeHtml(tx.description || '')}</td><td>${escapeHtml(tx.category || 'No category')}</td><td style="${color}">${sign}${fmtAmount(tx.amount)}</td><td>${escapeHtml(cardName)}</td><td class="actions"><button class="btn-ghost" data-act="edit-tx" data-id="${tx.id}"><i class="fas fa-edit"></i></button><button class="btn-ghost" data-act="del-tx" data-id="${tx.id}"><i class="fas fa-trash"></i></button></td>`;
     txTable.appendChild(tr);
   });
 }
@@ -180,7 +180,7 @@ function renderCharts() {
 
   const catMap = {};
   txs.filter(tx => tx.type === 'expense').forEach(tx => {
-    const c = tx.category || 'Інше';
+    const c = tx.category || 'Other';
     catMap[c] = (catMap[c] || 0) + Number(tx.amount);
   });
   const catLabels = Object.keys(catMap);
@@ -199,17 +199,17 @@ function renderCharts() {
     bal = txs.reduce((s, tx) => s + (tx.type === 'income' ? Number(tx.amount) : -Number(tx.amount)), 0);
   }
   const balEl = document.getElementById('today-balance');
-  if (balEl) balEl.textContent = `Баланс: ${fmtAmount(bal)} грн`;
+  if (balEl) balEl.textContent = `Balance: ${fmtAmount(bal)}`;
 }
 
 function updateTxCardOptions() {
   if (!txCardSelect) return;
-  txCardSelect.innerHTML = '<option value="">Без карти</option>';
+  txCardSelect.innerHTML = '<option value="">No card</option>';
   if (!currentUser) return;
   currentUser.cards.forEach(c => {
     const o = document.createElement('option');
     o.value = c.id;
-    o.textContent = `${c.name} (${fmtAmount(Number(c.balance||0))} грн)`;
+    o.textContent = `${c.name} (${fmtAmount(Number(c.balance||0))})`;
     txCardSelect.appendChild(o);
   });
   // also update goal options if present
@@ -218,12 +218,12 @@ function updateTxCardOptions() {
 
 function updateTxGoalOptions() {
   if (!txGoalSelect) return;
-  txGoalSelect.innerHTML = '<option value="">Прив\'язати до цілі (необов\'язково)</option>';
+  txGoalSelect.innerHTML = '<option value="">Link to goal (optional)</option>';
   if (!currentUser || !currentUser.goals) return;
   currentUser.goals.forEach(g => {
     const o = document.createElement('option');
     o.value = g.id;
-    o.textContent = `${g.title} — ${fmtAmount(Number(g.saved||0))}/${fmtAmount(Number(g.target||0))} грн`;
+    o.textContent = `${g.title} — ${fmtAmount(Number(g.saved||0))}/${fmtAmount(Number(g.target||0))}`;
     txGoalSelect.appendChild(o);
   });
 }
@@ -233,7 +233,7 @@ function showModal(title, content, onSave = null) {
   if (!modals) return null;
   const modal = document.createElement('div');
   modal.className = 'modal';
-  modal.innerHTML = `<div class="modal-content"><span class="close">&times;</span><div class="h1">${escapeHtml(title)}</div>${content}<div class="row" style="margin-top:12px;"><button class="btn" id="modal-save"><i class="fas fa-save"></i> Зберегти</button><button class="btn-ghost" id="modal-cancel"><i class="fas fa-times"></i> Скасувати</button></div></div>`;
+  modal.innerHTML = `<div class="modal-content"><span class="close">&times;</span><div class="h1">${escapeHtml(title)}</div>${content}<div class="row" style="margin-top:12px;"><button class="btn" id="modal-save"><i class="fas fa-save"></i> Save</button><button class="btn-ghost" id="modal-cancel"><i class="fas fa-times"></i> Cancel</button></div></div>`;
   modals.appendChild(modal);
   modal.querySelector('.close').addEventListener('click', () => modal.remove());
   modal.querySelector('#modal-cancel').addEventListener('click', () => modal.remove());
@@ -242,7 +242,7 @@ function showModal(title, content, onSave = null) {
       onSave();
     } catch (err) {
       console.error('Modal save error', err);
-      alert('Помилка при збереженні: ' + (err && err.message ? err.message : err));
+      alert('Error saving: ' + (err && err.message ? err.message : err));
       return;
     }
     modal.remove();
@@ -270,9 +270,9 @@ if (btnRegister) btnRegister.addEventListener('click', () => {
   const u = uEl ? uEl.value.trim() : '';
   const p = pEl ? pEl.value : '';
   try {
-    if (!u || !p) throw new Error('Заповніть поля');
+    if (!u || !p) throw new Error('Fill in all fields');
     createUser(u, p);
-    showAlert(authAlert, 'Користувач створений. Увійдіть.', 'success');
+    showAlert(authAlert, 'User created. Please sign in.', 'success');
   } catch (e) { showAlert(authAlert, e.message, 'error'); }
 });
 
@@ -317,19 +317,19 @@ if (btnSample) btnSample.addEventListener('click', () => {
       passwordHash: hash(p),
       cards: [{ id: uid('card'), name: 'Monobank', balance: 5000 }, { id: uid('card'), name: 'PrivatBank', balance: 1200 }],
       transactions: [
-        { id: uid('tx'), date: todayISO(), description: 'Зарплата', amount: 15000, type: 'income', category: 'Зарплата', card: 'Monobank' },
-        { id: uid('tx'), date: todayISO(), description: 'Покупка в АТБ', amount: 245.7, type: 'expense', category: 'Продукти', card: 'PrivatBank' },
-        { id: uid('tx'), date: todayISO(), description: 'Кава', amount: 45.5, type: 'expense', category: 'Їжа', card: 'Monobank' }
+        { id: uid('tx'), date: todayISO(), description: 'Salary', amount: 15000, type: 'income', category: 'Salary', card: 'Monobank' },
+        { id: uid('tx'), date: todayISO(), description: 'Purchase at Supermarket', amount: 245.7, type: 'expense', category: 'Groceries', card: 'PrivatBank' },
+        { id: uid('tx'), date: todayISO(), description: 'Coffee', amount: 45.5, type: 'expense', category: 'Food', card: 'Monobank' }
       ],
-      rules: [{ id: uid('rule'), keyword: 'АТБ', category: 'Продукти' }, { id: uid('rule'), keyword: 'зарплат', category: 'Зарплата' }, { id: uid('rule'), keyword: 'кава', category: 'Їжа' }],
-      goals: [{ id: uid('goal'), title: 'Купити ноутбук', target: 30000, saved: 5000, due: '' }]
+      rules: [{ id: uid('rule'), keyword: 'Supermarket', category: 'Groceries' }, { id: uid('rule'), keyword: 'salary', category: 'Salary' }, { id: uid('rule'), keyword: 'coffee', category: 'Food' }],
+      goals: [{ id: uid('goal'), title: 'Buy a laptop', target: 30000, saved: 5000, due: '' }]
     };
     saveUserData(u, user);
-    showAlert(authAlert, 'Демо-дані створені. Увійдіть.', 'success');
+    showAlert(authAlert, 'Demo data created. Please sign in.', 'success');
     document.getElementById('login-username').value = u;
     document.getElementById('login-password').value = p;
   } else {
-    showAlert(authAlert, 'Користувач вже існує.', 'error');
+    showAlert(authAlert, 'User already exists.', 'error');
   }
 });
 
@@ -337,7 +337,7 @@ if (btnSample) btnSample.addEventListener('click', () => {
 const btnAddCard = document.getElementById('btn-add-card');
 if (btnAddCard) btnAddCard.addEventListener('click', () => {
   const name = (document.getElementById('card-name') || {}).value.trim();
-  if (!name) return alert('Вкажіть назву');
+  if (!name) return alert('Specify a name');
   const bal = parseFloat((document.getElementById('card-balance') || {}).value) || 0;
   currentUser.cards.push({ id: uid('card'), name, balance: Number(fmtAmount(bal)) });
   saveUserData(currentUser.username, currentUser);
@@ -350,7 +350,7 @@ const btnAddRule = document.getElementById('btn-add-rule');
 if (btnAddRule) btnAddRule.addEventListener('click', () => {
   const k = (document.getElementById('rule-keyword') || {}).value.trim();
   const c = (document.getElementById('rule-category') || {}).value.trim();
-  if (!k || !c) return alert('Заповніть поля');
+  if (!k || !c) return alert('Fill in all fields');
   currentUser.rules.push({ id: uid('rule'), keyword: k, category: c });
   saveUserData(currentUser.username, currentUser);
   document.getElementById('rule-keyword').value = '';
@@ -360,14 +360,14 @@ if (btnAddRule) btnAddRule.addEventListener('click', () => {
 
 const btnAddGoal = document.getElementById('btn-add-goal');
 if (btnAddGoal) btnAddGoal.addEventListener('click', () => {
-  if (!currentUser) { alert('Спершу увійдіть у акаунт'); return; }
+  if (!currentUser) { alert('Please sign in first'); return; }
   const content = `
-    <input id="goal-title" type="text" placeholder="Назва цілі" />
-    <input id="goal-target" type="number" step="0.01" placeholder="Мета (грн)" />
-    <input id="goal-saved" type="number" step="0.01" placeholder="Початковий внесок (грн)" />
+    <input id="goal-title" type="text" placeholder="Goal name" />
+    <input id="goal-target" type="number" step="0.01" placeholder="Target amount" />
+    <input id="goal-saved" type="number" step="0.01" placeholder="Initial contribution" />
     <input id="goal-date" type="date" />`;
-  const modal = showModal('Додати ціль', content, () => {
-    const title = (document.getElementById('goal-title') || {}).value.trim() || 'Ціль';
+  const modal = showModal('Add Goal', content, () => {
+    const title = (document.getElementById('goal-title') || {}).value.trim() || 'Goal';
     const target = parseFloat((document.getElementById('goal-target') || {}).value) || 0;
     const saved = parseFloat((document.getElementById('goal-saved') || {}).value) || 0;
     const due = (document.getElementById('goal-date') || {}).value || '';
@@ -388,7 +388,7 @@ document.addEventListener('click', (e) => {
   const act = target.dataset.act;
   const id = target.dataset.id;
   if (act === 'del-card') {
-    if (!confirm('Видалити картку?')) return;
+    if (!confirm('Delete card?')) return;
     currentUser.cards = currentUser.cards.filter(c => c.id !== id);
     saveUserData(currentUser.username, currentUser);
     renderAll();
@@ -397,7 +397,7 @@ document.addEventListener('click', (e) => {
     saveUserData(currentUser.username, currentUser);
     renderAll();
   } else if (act === 'del-goal') {
-    if (!confirm('Видалити ціль?')) return;
+    if (!confirm('Delete goal?')) return;
     currentUser.goals = currentUser.goals.filter(g => g.id !== id);
     saveUserData(currentUser.username, currentUser);
     renderAll();
@@ -414,7 +414,7 @@ document.addEventListener('click', (e) => {
     const tCat = document.getElementById('tx-cat');
     const tDate = document.getElementById('tx-date');
     if (tType) tType.value = 'expense';
-    if (tDesc) tDesc.value = `Поповнення: ${g.title}`;
+    if (tDesc) tDesc.value = `Contribution: ${g.title}`;
     if (tCat) tCat.value = g.title || '';
     // preselect first card if available
     if (tCard && currentUser.cards && currentUser.cards.length) {
@@ -431,7 +431,7 @@ document.addEventListener('click', (e) => {
     const tGoal = document.getElementById('tx-goal');
     if (tGoal) tGoal.value = g.id;
   } else if (act === 'del-tx') {
-    if (!confirm('Видалити транзакцію?')) return;
+    if (!confirm('Delete transaction?')) return;
     const tx = currentUser.transactions.find(t => t.id === id);
     if (tx && tx.card) {
       const cardObj = currentUser.cards.find(c => c.id === tx.card || c.name === tx.card);
@@ -455,20 +455,20 @@ document.addEventListener('click', (e) => {
     const tx = currentUser.transactions.find(t => t.id === id);
     if (!tx) return;
     const content = `
-      <select id="edit-type"><option value="expense" ${tx.type === 'expense' ? 'selected' : ''}>Витрата</option><option value="income" ${tx.type === 'income' ? 'selected' : ''}>Дохід</option></select>
-      <input id="edit-amount" type="number" step="0.01" value="${tx.amount}" placeholder="Сума" />
-      <input id="edit-desc" type="text" value="${escapeHtml(tx.description)}" placeholder="Опис" />
-      <select id="edit-card">${txCardSelect ? txCardSelect.innerHTML : '<option value="">Без карти</option>'}</select>
+      <select id="edit-type"><option value="expense" ${tx.type === 'expense' ? 'selected' : ''}>Expense</option><option value="income" ${tx.type === 'income' ? 'selected' : ''}>Income</option></select>
+      <input id="edit-amount" type="number" step="0.01" value="${tx.amount}" placeholder="Amount" />
+      <input id="edit-desc" type="text" value="${escapeHtml(tx.description)}" placeholder="Description" />
+      <select id="edit-card">${txCardSelect ? txCardSelect.innerHTML : '<option value="">No card</option>'}</select>
       <input id="edit-date" type="date" value="${tx.date}" />
-      <input id="edit-cat" type="text" value="${escapeHtml(tx.category || '')}" placeholder="Категорія" />`;
-    const modal = showModal('Редагувати транзакцію', content, () => {
+      <input id="edit-cat" type="text" value="${escapeHtml(tx.category || '')}" placeholder="Category" />`;
+    const modal = showModal('Edit transaction', content, () => {
       const newType = document.getElementById('edit-type').value;
       const newAmount = parseFloat(document.getElementById('edit-amount').value);
       const newDesc = document.getElementById('edit-desc').value.trim();
       const newCard = document.getElementById('edit-card').value;
       const newDate = document.getElementById('edit-date').value || todayISO();
       const newCat = document.getElementById('edit-cat').value.trim();
-      if (isNaN(newAmount) || newAmount <= 0) return alert('Некоректна сума');
+      if (isNaN(newAmount) || newAmount <= 0) return alert('Invalid amount');
 
       // prepare references and prospective balances (do not mutate yet)
       const oldCardId = tx.card;
@@ -493,7 +493,7 @@ document.addEventListener('click', (e) => {
 
       // if prospective balance would go negative, ask for confirmation
       if (prospectiveNewBal !== null && prospectiveNewBal < 0) {
-        const ok = confirm(`На картці "${newCardObj.name}" буде баланс ${fmtAmount(prospectiveNewBal)} грн після редагування. Продовжити?`);
+        const ok = confirm(`Card "${newCardObj.name}" will have a balance of ${fmtAmount(prospectiveNewBal)} after editing. Continue?`);
         if (!ok) return; // abort without changing anything
       }
 
@@ -554,7 +554,7 @@ if (btnSaveTx) btnSaveTx.addEventListener('click', () => {
     const goalObj = currentUser.goals && currentUser.goals.find(g => g.id === txGoalVal);
     if (goalObj) cat = goalObj.title || cat;
   }
-  if (isNaN(amount) || amount <= 0 || !desc) return alert('Заповніть суму та опис');
+  if (isNaN(amount) || amount <= 0 || !desc) return alert('Fill in amount and description');
   const newTx = { id: uid('tx'), date, description: desc, amount, type, category: cat, card };
   applyRulesToTx(newTx);
   // update card balance if transaction associated with a card (card is card id)
@@ -564,7 +564,7 @@ if (btnSaveTx) btnSaveTx.addEventListener('click', () => {
       const oldBal = Number(cardObj.balance || 0);
       const newBal = type === 'income' ? oldBal + Number(amount) : oldBal - Number(amount);
       if (newBal < 0) {
-        const ok = confirm(`На картці "${cardObj.name}" буде баланс ${fmtAmount(newBal)} грн. Продовжити з дозволом негативного балансу?`);
+        const ok = confirm(`Card "${cardObj.name}" will have a balance of ${fmtAmount(newBal)}. Continue and allow negative balance?`);
         if (!ok) return;
       }
       cardObj.balance = Number(fmtAmount(newBal));
@@ -613,7 +613,7 @@ function parseSmsTextBlock(text) {
     if (!amount && amount !== 0) return;
     const isIncome = /(надходж|поповн|заведен|зарплат|виплат|income|deposit)/i.test(line);
     const type = isIncome ? 'income' : 'expense';
-    const desc = line.replace(/(\d+[.,]?\d*)\s*(грн|uah|usd|eur)?/gi, '').replace(/баланс:\s*\d+[.,]?\d*/i, '').trim();
+    const desc = line.replace(/(\d+[.,]?\d*)\s*(грн|uah|usd|eur)?/gi, '').replace(/(баланс|balance):\s*\d+[.,]?\d*/i, '').trim();
     parsed.push({ description: desc || line, amount, type });
   });
   return parsed;
@@ -632,9 +632,9 @@ function applyRulesToTx(tx) {
 const btnParseSms = document.getElementById('btn-parse-sms');
 if (btnParseSms) btnParseSms.addEventListener('click', () => {
   const text = (smsText || {}).value?.trim();
-  if (!text) return alert('Вставте текст');
+  if (!text) return alert('Paste text');
   const parsed = parseSmsTextBlock(text);
-  if (parsed.length === 0) return alert('Не знайдено транзакцій');
+  if (parsed.length === 0) return alert('No transactions found');
   parsed.forEach(p => {
     const newTx = { id: uid('tx'), date: todayISO(), description: p.description, amount: p.amount, type: p.type, category: '', card: '' };
     applyRulesToTx(newTx);
@@ -643,23 +643,23 @@ if (btnParseSms) btnParseSms.addEventListener('click', () => {
   saveUserData(currentUser.username, currentUser);
   if (smsText) smsText.value = '';
   renderAll();
-  alert(`Імпортовано ${parsed.length} транзакцій`);
+  alert(`Imported ${parsed.length} transactions`);
 });
 
 const btnSimulateSms = document.getElementById('btn-simulate-sms');
 if (btnSimulateSms) btnSimulateSms.addEventListener('click', () => {
   const samples = [
-    'Покупка 153.20 грн в АТБ. Баланс: 2004.55',
-    'Надходження 15000 грн. Зарплата',
-    'Оплата 89.50 грн - Кафе. Баланс: 1915.05',
-    'Поповнення 500 грн від друга'
+    'Purchase 153.20 at Supermarket. Balance: 2004.55',
+    'Income 15000. Salary',
+    'Payment 89.50 - Cafe. Balance: 1915.05',
+    'Transfer 500 from friend'
   ];
   if (smsText) smsText.value = samples[Math.floor(Math.random() * samples.length)];
 });
 
 const btnSmsPaste = document.getElementById('btn-sms-paste');
 if (btnSmsPaste) btnSmsPaste.addEventListener('click', () => {
-  const t = prompt('Вставте текст SMS (кілька рядків OK)');
+  const t = prompt('Paste SMS text (multiple lines OK)');
   if (t && smsText) smsText.value = t;
 });
 
@@ -686,7 +686,7 @@ if (fileImport) fileImport.addEventListener('change', (e) => {
             imported++;
           });
         }
-      } catch (e) { alert('Помилка JSON'); }
+      } catch (e) { alert('JSON Error'); }
     } else if (f.name.endsWith('.csv')) {
       const rows = txt.split('\n').map(r => r.trim()).filter(Boolean).slice(1);
       rows.forEach(r => {
@@ -700,8 +700,8 @@ if (fileImport) fileImport.addEventListener('change', (e) => {
     if (imported > 0) {
       saveUserData(currentUser.username, currentUser);
       renderAll();
-      alert(`Імпортовано ${imported} записів`);
-    } else alert('Нічого не імпортовано');
+      alert(`Imported ${imported} records`);
+    } else alert('Nothing imported');
   };
   reader.readAsText(f);
 });
@@ -709,7 +709,7 @@ if (fileImport) fileImport.addEventListener('change', (e) => {
 /* Export / restore / backup */
 const btnExport = document.getElementById('btn-export');
 if (btnExport) btnExport.addEventListener('click', () => {
-  if (!currentUser) return alert('Немає користувача');
+  if (!currentUser) return alert('No user');
   const data = JSON.stringify(currentUser, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -728,19 +728,19 @@ if (fileRestore) fileRestore.addEventListener('change', (e) => {
   reader.onload = () => {
     try {
       const obj = JSON.parse(reader.result);
-      if (!obj.username) throw new Error('Невірний файл');
+      if (!obj.username) throw new Error('Invalid file');
       if (obj.username !== currentUser.username) {
-        if (confirm('Файл для іншого користувача. Імпортувати як новий?')) {
+        if (confirm('File is for another user. Import as new?')) {
           saveUserData(obj.username, obj);
-          alert(`Імпортовано як ${obj.username}`);
+          alert(`Imported as ${obj.username}`);
         }
       } else {
         currentUser = obj;
         saveUserData(currentUser.username, currentUser);
         renderAll();
-        alert('Дані відновлено');
+        alert('Data restored');
       }
-    } catch (e) { alert('Помилка JSON'); }
+    } catch (e) { alert('JSON Error'); }
   };
   reader.readAsText(f);
 });
@@ -834,8 +834,6 @@ if (profileLogoutBtn) {
 
     if (typeof tabHistory !== 'undefined' && Array.isArray(tabHistory)) tabHistory.length = 0;
     const backBtn = document.getElementById('btn-back'); if (backBtn) backBtn.classList.add('hidden');
-
-    
   });
 }
 
@@ -868,7 +866,7 @@ window.addEventListener('beforeunload', () => {
   if (currentUser) saveUserData(currentUser.username, currentUser);
 });
 
-/* Logo click -> перейти на головну (dashboard) або показати форму входу */
+/* Logo click -> switch to main (dashboard) or show login form */
 const headerLogo = document.querySelector('.header-logo');
 if (headerLogo) {
   headerLogo.style.cursor = 'pointer';
@@ -888,13 +886,13 @@ if (headerLogo) {
   });
 }
 
-/* Ініціалізація контейнера скролу для таблиці транзакцій */
+/* Initialize scroll container for transactions table */
 (function initTxScrollContainer(){
   const txTable = document.getElementById('tx-table');
   if (!txTable) return;
-  // знайдемо найближчий блок, який є wrapper для таблиці (в index.html це div з max-height)
+  // find nearest block that is a wrapper for the table (in index.html this is a div with max-height)
   let parent = txTable.closest('div');
-  // якщо wrapper має ще wrapper-и (наприклад вкладені диви), знайдемо найближчий з max-height або overflow
+  // if the wrapper has additional wrappers (like nested divs), find the nearest with max-height or overflow
   while (parent && getComputedStyle(parent).overflow === 'visible') {
     const maybe = parent.closest('div');
     if (!maybe || maybe === parent) break;
@@ -902,7 +900,7 @@ if (headerLogo) {
   }
   if (!parent) parent = txTable.parentElement;
 
-  // Задаємо захищені стилі, щоб не було горизонтального скролу і щоб скролбар був акуратним
+  // Apply safe styles to prevent horizontal scroll and keep scrollbar neat
   parent.classList.add('tx-scroll');
   parent.style.overflow = 'auto';
   parent.style.maxHeight = parent.style.maxHeight || '350px';
@@ -910,12 +908,12 @@ if (headerLogo) {
   parent.style.webkitOverflowScrolling = 'touch';
   parent.style.scrollbarGutter = 'stable both-edges';
 
-  // Гарантуємо, що таблиця не ширша за контейнер
+  // Ensure table is not wider than the container
   txTable.style.width = '100%';
   txTable.style.tableLayout = 'fixed';
   txTable.style.borderCollapse = 'collapse';
 
-  // Застосуємо обрізання тексту у всіх клітинках як додатковий захист від розривів
+  // Apply text truncation in all cells as an extra protection against line breaks
   txTable.querySelectorAll('th, td').forEach(td => {
     td.style.overflow = 'hidden';
     td.style.textOverflow = 'ellipsis';
