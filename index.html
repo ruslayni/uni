@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="uk">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PF — Облік Персональних Фінансів</title>
+  <title>PF — Personal Finance Tracker</title>
   <!-- Favicon / Tab icon -->
   <link rel="icon" type="image/png" href="logo.png" />
   <!-- Touch icon for iOS / Android home screen -->
@@ -21,7 +21,7 @@
 </head>
 <body>
   <header id="header">
-    <button id="btn-back" class="header-btn hidden" title="Назад">
+    <button id="btn-back" class="header-btn hidden" title="Back">
       <i class="fas fa-arrow-left"></i>
     </button>
     <div class="header-logo" aria-label="PF — логотип" role="img">
@@ -29,11 +29,11 @@
     </div>
     <div class="header-spacer"></div>
     <nav id="topnav" class="hidden-mobile">
-      <div class="nav-link" data-tab="tab-dashboard">Панель</div>
-      <div class="nav-link" data-tab="tab-transactions">Транзакції</div>
-      <div class="nav-link" data-tab="tab-cards">Картки</div>
+      <div class="nav-link" data-tab="tab-dashboard">Dashboard</div>
+      <div class="nav-link" data-tab="tab-transactions">Transactions</div>
+      <div class="nav-link" data-tab="tab-cards">Cards</div>
       
-      <div class="nav-link" data-tab="tab-profile">Профіль</div>
+      <div class="nav-link" data-tab="tab-profile">Profile</div>
     </nav>
   </header>
 
@@ -42,24 +42,24 @@
     <section id="auth" class="card">
       <div class="space-between">
         <div>
-          <div class="h1">Вхід / Реєстрація</div>
+          <div class="h1">Login / Register</div>
           <div class="muted small"></div>
         </div>
-        <button class="btn-ghost" id="btn-sample"><i class="fas fa-database"></i> Демо-дані</button>
+        <button class="btn-ghost" id="btn-sample"><i class="fas fa-database"></i> Demo Data</button>
       </div>
       <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
         <div class="field">
           <input id="login-username" type="text" placeholder=" " autocomplete="username" />
-          <label for="login-username" class="floating-label small muted">Логін</label>
+          <label for="login-username" class="floating-label small muted">Username</label>
         </div>
         <div class="field">
           <input id="login-password" type="password" placeholder=" " autocomplete="current-password" />
-          <label for="login-password" class="floating-label small muted">Пароль</label>
+          <label for="login-password" class="floating-label small muted">Password</label>
         </div>
       </div>
       <div style="margin-top: 12px; display: flex; gap: 8px;">
-        <button class="btn" id="btn-login"><i class="fas fa-sign-in-alt"></i> Увійти</button>
-        <button class="btn-ghost" id="btn-register"><i class="fas fa-user-plus"></i> Зареєструватися</button>
+        <button class="btn" id="btn-login"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+        <button class="btn-ghost" id="btn-register"><i class="fas fa-user-plus"></i> Sign Up</button>
       </div>
       <div id="auth-alert" class="alert hidden"></div>
     </section>
@@ -70,8 +70,8 @@
         <div class="card" id="dashboard-card">
           <div class="space-between">
             <div>
-              <div class="h1">Панель — <span id="user-display"></span></div>
-              <div class="muted small" id="today-balance">Баланс: 0.00 грн</div>
+              <div class="h1">Dashboard — <span id="user-display"></span></div>
+              <div class="muted small" id="today-balance">Balance: 0.00</div>
             </div>
             <div class="actions">
               <!-- Logout button removed from main page -->
@@ -79,18 +79,18 @@
           </div>
           <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="card" style="padding: 12px;">
-              <div class="muted">Місячний баланс</div>
+              <div class="muted">Monthly Balance</div>
               <canvas id="chart-balance" height="100"></canvas>
             </div>
             <div class="card" style="padding: 12px;">
-              <div class="muted">Витрати за категоріями</div>
+              <div class="muted">Expenses by Category</div>
               <canvas id="chart-cats" height="120"></canvas>
             </div>
           </div>
 
           <div class="card" style="margin-top: 12px; padding: 12px;">
             <div class="space-between" style="margin-bottom: 8px;">
-              <div class="muted">Цілі заощаджень</div>
+              <div class="muted">Savings Goals</div>
               <button class="btn-ghost small" id="btn-add-goal"><i class="fas fa-plus"></i></button>
             </div>
             <div id="goals-list" style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;"></div>
@@ -101,39 +101,39 @@
       <div id="tab-transactions" class="tab-section hidden">
         <div class="card">
           <div class="space-between">
-            <div class="h1">Транзакції</div>
-            <div class="muted small">Фільтр: <input id="tx-filter" type="text" placeholder="Пошук..." style="width: 120px;"/></div>
+            <div class="h1">Transactions</div>
+            <div class="muted small">Filter: <input id="tx-filter" type="text" placeholder="Search..." style="width: 120px;"/></div>
           </div>
           <div style="margin-top: 8px;" class="row">
-            <button class="btn" id="btn-add-transaction"><i class="fas fa-plus"></i> Додати</button>
-            <label class="btn-ghost" for="file-import"><i class="fas fa-upload"></i> Імпорт файлу</label>
+            <button class="btn" id="btn-add-transaction"><i class="fas fa-plus"></i> Add</button>
+            <label class="btn-ghost" for="file-import"><i class="fas fa-upload"></i> Import File</label>
             <input id="file-import" type="file" accept=".json,.csv" />
           </div>
           <div class="table-wrapper">
             <table>
-              <thead><tr><th>Дата</th><th>Опис</th><th>Категорія</th><th>Сума</th><th>Карта</th><th>Дії</th></tr></thead>
+              <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Card</th><th>Actions</th></tr></thead>
               <tbody id="tx-table"></tbody>
             </table>
           </div>
         </div>
         <div class="card" style="margin-top: 16px;">
-          <div class="h1">Додати транзакцію</div>
+          <div class="h1">Add Transaction</div>
           <div style="display: grid; gap: 8px; margin-top: 8px;">
             <select id="tx-type">
-              <option value="expense">Витрата</option>
-              <option value="income">Дохід</option>
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
             </select>
-            <input id="tx-amount" type="number" step="0.01" placeholder="Сума (153.20)" />
-            <input id="tx-desc" type="text" placeholder="Опис (Покупка в АТБ)" />
+            <input id="tx-amount" type="number" step="0.01" placeholder="Amount (153.20)" />
+            <input id="tx-desc" type="text" placeholder="Description (Grocery Store)" />
             <select id="tx-card"></select>
             <select id="tx-goal">
-              <option value="">Прив'язати до цілі (необов'язково)</option>
+              <option value="">Link to goal (optional)</option>
             </select>
             <input id="tx-date" type="date" />
-            <input id="tx-cat" type="text" placeholder="Категорія (Продукти)" />
+            <input id="tx-cat" type="text" placeholder="Category (Groceries)" />
             <div class="row">
-              <button class="btn" id="btn-save-tx"><i class="fas fa-save"></i> Зберегти</button>
-              <button class="btn-ghost" id="btn-reset-tx"><i class="fas fa-undo"></i> Очистити</button>
+              <button class="btn" id="btn-save-tx"><i class="fas fa-save"></i> Save</button>
+              <button class="btn-ghost" id="btn-reset-tx"><i class="fas fa-undo"></i> Clear</button>
             </div>
           </div>
         </div>
@@ -141,12 +141,12 @@
 
       <div id="tab-cards" class="tab-section hidden">
         <div class="card">
-          <div class="h1">Картки</div>
-          <div class="muted small">Додайте картки для асоціації транзакцій</div>
+          <div class="h1">Cards</div>
+          <div class="muted small">Add cards to associate transactions</div>
           <div style="margin-top: 8px; display: grid; grid-template-columns: 1fr auto; gap: 8px;">
-            <input id="card-name" type="text" placeholder="Назва (наприклад, Monobank)" />
-            <input id="card-balance" type="number" step="0.01" placeholder="Баланс (0.00)" style="width:120px" />
-            <button class="btn" id="btn-add-card"><i class="fas fa-credit-card"></i> Додати</button>
+            <input id="card-name" type="text" placeholder="Name (e.g., Bank)" />
+            <input id="card-balance" type="number" step="0.01" placeholder="Balance (0.00)" style="width:120px" />
+            <button class="btn" id="btn-add-card"><i class="fas fa-credit-card"></i> Add</button>
           </div>
           <div style="margin-top: 12px;" id="cards-list"></div>
         </div>
@@ -154,55 +154,55 @@
 
       <div id="tab-profile" class="tab-section hidden">
         <div class="card">
-          <div class="h1">Профіль — <span id="user-display-profile"></span></div>
-          <div class="muted small">Швидкий доступ до налаштувань і керування акаунтом</div>
+          <div class="h1">Profile — <span id="user-display-profile"></span></div>
+          <div class="muted small">Quick access to settings and account management</div>
           <div style="margin-top:12px; display: grid; gap:8px;">
-            <button class="btn" id="profile-btn-rules"><i class="fas fa-tags"></i> Правила</button>
-            <button class="btn" id="profile-btn-import"><i class="fas fa-upload"></i> Імпорт SMS / Файлів</button>
-            <button class="btn" id="profile-btn-settings"><i class="fas fa-cog"></i> Налаштування</button>
-            <button class="btn-ghost" id="profile-btn-logout"><i class="fas fa-sign-out-alt"></i> Вийти з акаунту</button>
+            <button class="btn" id="profile-btn-rules"><i class="fas fa-tags"></i> Rules</button>
+            <button class="btn" id="profile-btn-import"><i class="fas fa-upload"></i> Import SMS / Files</button>
+            <button class="btn" id="profile-btn-settings"><i class="fas fa-cog"></i> Settings</button>
+            <button class="btn-ghost" id="profile-btn-logout"><i class="fas fa-sign-out-alt"></i> Log Out</button>
           </div>
         </div>
       </div>
 
       <div id="tab-rules" class="tab-section hidden">
         <div class="card">
-          <div class="h1">Правила авто-категоризації</div>
-          <div class="muted small">Автоматично присвоювати категорії за ключовими словами</div>
+          <div class="h1">Auto-categorization Rules</div>
+          <div class="muted small">Automatically assign categories based on keywords</div>
           <div id="rules-list" style="margin-top: 8px;"></div>
           <div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px;">
-            <input id="rule-keyword" placeholder="Ключове слово (АТБ)" />
-            <input id="rule-category" placeholder="Категорія (Продукти)" />
-            <button class="btn" id="btn-add-rule"><i class="fas fa-plus"></i> Додати</button>
+            <input id="rule-keyword" placeholder="Keyword (Supermarket)" />
+            <input id="rule-category" placeholder="Category (Groceries)" />
+            <button class="btn" id="btn-add-rule"><i class="fas fa-plus"></i> Add</button>
           </div>
         </div>
       </div>
 
       <div id="tab-import" class="tab-section hidden">
         <div class="card">
-          <div class="h1">Імпорт з SMS</div>
-          <div class="muted small">Вставте текст SMS для автоматичного імпорту</div>
+          <div class="h1">Import from SMS</div>
+          <div class="muted small">Paste SMS text for automatic import</div>
           <div style="margin-top: 8px;" class="row">
-            <button class="btn-ghost" id="btn-sms-paste"><i class="fas fa-paste"></i> Вставити SMS</button>
-            <button class="btn-ghost" id="btn-simulate-sms"><i class="fas fa-robot"></i> Симулятор</button>
+            <button class="btn-ghost" id="btn-sms-paste"><i class="fas fa-paste"></i> Paste SMS</button>
+            <button class="btn-ghost" id="btn-simulate-sms"><i class="fas fa-robot"></i> Simulator</button>
           </div>
-          <textarea id="sms-text" rows="5" placeholder="Вставте текст SMS (підтримка кількох рядків)"></textarea>
+          <textarea id="sms-text" rows="5" placeholder="Paste SMS text (multi-line supported)"></textarea>
           <div style="margin-top: 8px; display: flex; gap: 8px;">
-            <button class="btn" id="btn-parse-sms"><i class="fas fa-search"></i> Парсити</button>
-            <button class="btn-ghost" id="btn-clear-sms"><i class="fas fa-times"></i> Очистити</button>
+            <button class="btn" id="btn-parse-sms"><i class="fas fa-search"></i> Parse</button>
+            <button class="btn-ghost" id="btn-clear-sms"><i class="fas fa-times"></i> Clear</button>
           </div>
-          <div class="muted small" style="margin-top: 8px;">Приклади: "Покупка 153.20 грн в АТБ. Баланс: 2004.55" або "Надходження 2000 грн"</div>
+          <div class="muted small" style="margin-top: 8px;">Examples: "Purchase 153.20 at Supermarket. Balance: 2004.55" or "Income 2000"</div>
         </div>
       </div>
 
       <div id="tab-settings" class="tab-section hidden">
         <div class="card">
-          <div class="h1">Налаштування</div>
-          <div class="muted small">Експорт / Імпорт даних</div>
+          <div class="h1">Settings</div>
+          <div class="muted small">Export / Import Data</div>
           <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-            <button class="btn-ghost" id="btn-backup"><i class="fas fa-download"></i> Бекап усіх даних</button>
-            <button class="btn" id="btn-export"><i class="fas fa-file-export"></i> Експорт JSON</button>
-            <label class="btn-ghost" for="file-restore"><i class="fas fa-file-import"></i> Імпорт JSON</label>
+            <button class="btn-ghost" id="btn-backup"><i class="fas fa-download"></i> Backup All Data</button>
+            <button class="btn" id="btn-export"><i class="fas fa-file-export"></i> Export JSON</button>
+            <label class="btn-ghost" for="file-restore"><i class="fas fa-file-import"></i> Import JSON</label>
             <input id="file-restore" type="file" accept=".json" />
           </div>
         </div>
@@ -215,21 +215,21 @@
 
   <!-- Bottom Navigation -->
   <nav id="bottom-nav" class="hidden">
-    <button class="nav-item" data-tab="tab-dashboard" title="Панель">
+    <button class="nav-item" data-tab="tab-dashboard" title="Dashboard">
       <i class="fas fa-chart-line"></i>
-      <span>Панель</span>
+      <span>Dashboard</span>
     </button>
-    <button class="nav-item" data-tab="tab-transactions" title="Транзакції">
+    <button class="nav-item" data-tab="tab-transactions" title="Transactions">
       <i class="fas fa-exchange-alt"></i>
-      <span>Транзакції</span>
+      <span>Transactions</span>
     </button>
-    <button class="nav-item" data-tab="tab-cards" title="Картки">
+    <button class="nav-item" data-tab="tab-cards" title="Cards">
       <i class="fas fa-credit-card"></i>
-      <span>Картки</span>
+      <span>Cards</span>
     </button>
-    <button class="nav-item" data-tab="tab-profile" title="Профіль">
+    <button class="nav-item" data-tab="tab-profile" title="Profile">
       <i class="fas fa-user"></i>
-      <span>Профіль</span>
+      <span>Profile</span>
     </button>
   </nav>
 
